@@ -2,5 +2,8 @@
 <resources>
     <declare-styleable name="NightSwitch">
         <attr name="allow_padding" format="boolean"/>
+        <attr name="switch_inner_padding" format="dimension"/>
+        <attr name="switch_off_color" format="color"/>
+        <attr name="switch_on_color" format="color"/>
     </declare-styleable>
 </resources>

@@ -4,16 +4,18 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.RectF;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
+
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,34 +26,84 @@ import android.view.animation.LinearInterpolator;
 /**
  * Created by Palak SD on 14-07-2017.
  */
-
 public class NightSwitch extends View {
 
     private static final String TAG = NightSwitch.class.getSimpleName();
-    private int width;
-    private int height;
-    private RectF bgRectF;
-    private Paint bgPaint,bg1Paint;
-    private Paint circlePaint;
+
+    private int width,height;
     private boolean animating;
     private boolean isInRight;
     private int borderPadding;
-    private float maskX;
-    private int circleRadius;
-    private int verticalOffset;
-    private Paint offsetPaint;
-    private float offsetRadius;
-    private AnimatorSet animatorSet;
-    private int cyanColor;
-    private int purpleColor;
+    private float offsetX;
+    private int thumbCircleRadius;
+    private int offsetY;
+    private float offsetCircleRadius;
+    private int offColor;
+    private int onColor;
     private int bgColor;
+
+    private RectF bgRectF;
+    private Paint bgPaint,circlePaint;
+    private AnimatorSet animatorSet;
 
     public NightSwitch(Context context) {
         super(context);
+        init(null);
     }
 
     public NightSwitch(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        init(attrs);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public NightSwitch(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        super(context, attrs, defStyleAttr, defStyleRes);
+        init(attrs);
+    }
+
+    void init(AttributeSet attrs) {
+
+        //here is where we will fetch attributes passed in xml
+        if (attrs != null){
+            TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.NightSwitch);
+            borderPadding = typedArray.getDimensionPixelSize(R.styleable.NightSwitch_switch_inner_padding, 5);
+            offColor = typedArray.getColor(R.styleable.NightSwitch_switch_off_color, ContextCompat.getColor(getContext(),R.color.cyan));
+            onColor = typedArray.getColor(R.styleable.NightSwitch_switch_on_color, ContextCompat.getColor(getContext(),R.color.purple));
+        }
+
+        setBackgroundColor(ContextCompat.getColor(getContext(),android.R.color.transparent));
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+
+        //These are just best looking reference dimens to adjust height according to given width.
+        int desiredWidth = dpToPx(120);
+        int desiredHeight = dpToPx(50);
+
+        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+
+        int width;
+        int height;
+
+        //Measure Width
+        if (widthMode == MeasureSpec.EXACTLY) {
+            //Must be this size
+            width = widthSize;
+        } else if (widthMode == MeasureSpec.AT_MOST) {
+            //Can't be bigger than...
+            width = Math.min(desiredWidth, widthSize);
+        } else {
+            //Be whatever you want
+            width = desiredWidth;
+        }
+
+        //Now, time to calculate height according to calculated width in reference to desired width and height!
+        height = width*desiredHeight/desiredWidth;
+
+        setMeasuredDimension(width, height);
     }
 
     @Override
@@ -64,47 +116,32 @@ public class NightSwitch extends View {
 
         width = getWidth();
         height = getHeight();
-        borderPadding = dpToPx(5);
-        maskX = borderPadding;
-        cyanColor = ContextCompat.getColor(getContext(),R.color.cyan);
-        purpleColor = ContextCompat.getColor(getContext(),R.color.purple);
-        bgColor = cyanColor;
+
+        //Initial offsetX is on the border padding left.
+        offsetX = borderPadding;
+        bgColor = offColor;
 
         bgRectF = new RectF(0,0,width,height);
 
         bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         bgPaint.setColor(bgColor);
-        bgPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        bgPaint.setPathEffect(null);
-
-        bg1Paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        bg1Paint.setColor(Color.BLACK);
-        bg1Paint.setStyle(Paint.Style.FILL_AND_STROKE);
-        bg1Paint.setPathEffect(null);
-
-
-        offsetPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        offsetPaint.setColor(Color.RED);
-        offsetPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        offsetPaint.setPathEffect(null);
 
         circlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         circlePaint.setColor(Color.WHITE);
-        circlePaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        circlePaint.setPathEffect(null);
 
+        thumbCircleRadius = (height/2) - (borderPadding);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
 
         bgPaint.setColor(bgColor);
-        canvas.drawRoundRect(bgRectF,dpToPx(25),dpToPx(25),bgPaint);
-        circleRadius = (height/2) - (borderPadding);
 
-        canvas.drawCircle(maskX + circleRadius, borderPadding + circleRadius ,circleRadius,circlePaint);
+        canvas.drawRoundRect(bgRectF,height/2,height/2,bgPaint);
 
-        canvas.drawCircle(maskX,verticalOffset,offsetRadius,bgPaint);
+        canvas.drawCircle(offsetX + thumbCircleRadius, borderPadding + thumbCircleRadius, thumbCircleRadius,circlePaint);
+
+        canvas.drawCircle(offsetX, offsetY, offsetCircleRadius,bgPaint);
 
         super.onDraw(canvas);
     }
@@ -131,19 +168,19 @@ public class NightSwitch extends View {
 
         if(animatorSet == null) animatorSet = new AnimatorSet();
 
-        ObjectAnimator objectAnimatorX = ObjectAnimator.ofFloat(this,"maskX",borderPadding,getWidth() - (circleRadius*2)- borderPadding);
+        ObjectAnimator objectAnimatorX = ObjectAnimator.ofFloat(this,"offsetX",borderPadding,getWidth() - (thumbCircleRadius *2)- borderPadding);
         objectAnimatorX.setDuration(500);
         objectAnimatorX.setInterpolator(new AccelerateDecelerateInterpolator());
 
-        ObjectAnimator objectAnimatorOffsetRadius = ObjectAnimator.ofFloat(this,"offsetRadius",0,circleRadius);
+        ObjectAnimator objectAnimatorOffsetRadius = ObjectAnimator.ofFloat(this,"offsetCircleRadius",0, thumbCircleRadius);
         objectAnimatorOffsetRadius.setDuration(400);
         objectAnimatorOffsetRadius.setInterpolator(new AccelerateDecelerateInterpolator());
 
-        ObjectAnimator objectAnimatorColor = ObjectAnimator.ofArgb(this,"bgColor",cyanColor,purpleColor);
+        ObjectAnimator objectAnimatorColor = ObjectAnimator.ofArgb(this,"bgColor", offColor, onColor);
         objectAnimatorColor.setDuration(500);
         objectAnimatorColor.setInterpolator(new LinearInterpolator());
 
-        ObjectAnimator objectAnimatorVerticalOffset = ObjectAnimator.ofInt(this,"verticalOffset",circleRadius,borderPadding);
+        ObjectAnimator objectAnimatorVerticalOffset = ObjectAnimator.ofInt(this,"offsetY", thumbCircleRadius,borderPadding);
         objectAnimatorVerticalOffset.setDuration(400);
         objectAnimatorVerticalOffset.setInterpolator(new DecelerateInterpolator());
 
@@ -173,19 +210,19 @@ public class NightSwitch extends View {
 
         if(animatorSet == null) animatorSet = new AnimatorSet();
 
-        ObjectAnimator objectAnimatorX = ObjectAnimator.ofFloat(this,"maskX",getWidth() - (circleRadius*2)- borderPadding,borderPadding);
+        ObjectAnimator objectAnimatorX = ObjectAnimator.ofFloat(this,"offsetX",getWidth() - (thumbCircleRadius *2)- borderPadding,borderPadding);
         objectAnimatorX.setDuration(500);
         objectAnimatorX.setInterpolator(new AccelerateDecelerateInterpolator());
 
-        ObjectAnimator objectAnimatorOffsetRadius = ObjectAnimator.ofFloat(this,"offsetRadius",circleRadius,0);
+        ObjectAnimator objectAnimatorOffsetRadius = ObjectAnimator.ofFloat(this,"offsetCircleRadius", thumbCircleRadius,0);
         objectAnimatorOffsetRadius.setDuration(400);
         objectAnimatorOffsetRadius.setInterpolator(new AccelerateDecelerateInterpolator());
 
-        ObjectAnimator objectAnimatorColor = ObjectAnimator.ofArgb(this,"bgColor",purpleColor,cyanColor);
+        ObjectAnimator objectAnimatorColor = ObjectAnimator.ofArgb(this,"bgColor", onColor, offColor);
         objectAnimatorColor.setDuration(500);
         objectAnimatorColor.setInterpolator(new LinearInterpolator());
 
-        ObjectAnimator objectAnimatorVerticalOffset = ObjectAnimator.ofInt(this,"verticalOffset",borderPadding,circleRadius);
+        ObjectAnimator objectAnimatorVerticalOffset = ObjectAnimator.ofInt(this,"offsetY",borderPadding, thumbCircleRadius);
         objectAnimatorVerticalOffset.setDuration(400);
         objectAnimatorVerticalOffset.setInterpolator(new AccelerateDecelerateInterpolator());
 
@@ -221,19 +258,17 @@ public class NightSwitch extends View {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, this.getContext().getResources().getDisplayMetrics());
     }
 
-    public void setMaskX(float maskX) {
-        this.maskX = maskX;
-        invalidate();
-    }
-
-    public void setOffsetRadius(float offsetRadius){
-        this.offsetRadius = offsetRadius;
+    public void setOffsetX(float offsetX) {
+        this.offsetX = offsetX;
         //invalidate();
     }
 
-    public void setVerticalOffset(int verticalOffset){
-        this.verticalOffset = verticalOffset;
-        //invalidate();
+    public void setOffsetCircleRadius(float offsetCircleRadius){
+        this.offsetCircleRadius = offsetCircleRadius;
+    }
+
+    public void setOffsetY(int offsetY){
+        this.offsetY = offsetY;
     }
 
     public void setBgColor(int bgColor){
