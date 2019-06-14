@@ -20,6 +20,7 @@ import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.AccelerateInterpolator;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LinearInterpolator;
 
@@ -182,7 +183,7 @@ public class NightSwitch extends View {
 
         ObjectAnimator objectAnimatorVerticalOffset = ObjectAnimator.ofInt(this,"offsetY", thumbCircleRadius,borderPadding);
         objectAnimatorVerticalOffset.setDuration(400);
-        objectAnimatorVerticalOffset.setInterpolator(new DecelerateInterpolator());
+        objectAnimatorVerticalOffset.setInterpolator(new AccelerateDecelerateInterpolator());
 
         animatorSet.playTogether(objectAnimatorX,objectAnimatorOffsetRadius,objectAnimatorVerticalOffset,objectAnimatorColor);
         animatorSet.addListener(new Animator.AnimatorListener() {
@@ -248,19 +249,12 @@ public class NightSwitch extends View {
         animatorSet.start();
     }
 
-    public int convertPxToDp(int px) {
-        DisplayMetrics displayMetrics = this.getContext().getResources().getDisplayMetrics();
-        int dp = Math.round(px / (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT));
-        return dp;
-    }
-
     public int dpToPx(int dp) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, this.getContext().getResources().getDisplayMetrics());
     }
 
     public void setOffsetX(float offsetX) {
         this.offsetX = offsetX;
-        //invalidate();
     }
 
     public void setOffsetCircleRadius(float offsetCircleRadius){
@@ -271,6 +265,8 @@ public class NightSwitch extends View {
         this.offsetY = offsetY;
     }
 
+    //Calling invalidate only from this method to update whole view.
+    //This setter will be called by animator to set new value everytime.
     public void setBgColor(int bgColor){
         this.bgColor = bgColor;
         invalidate();
