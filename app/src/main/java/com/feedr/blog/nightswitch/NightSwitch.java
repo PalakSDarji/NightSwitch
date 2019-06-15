@@ -79,7 +79,8 @@ public class NightSwitch extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
-        //These are just best looking reference dimens to adjust height according to given width.
+        //These are just best looking reference dimens to set the height of the view according to given width.
+        //you can also consider this as aspect ratio.
         int desiredWidth = dpToPx(120);
         int desiredHeight = dpToPx(50);
 
