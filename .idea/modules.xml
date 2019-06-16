@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/NightSwitch.iml" filepath="$PROJECT_DIR$/NightSwitch.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/nightswitchlibrary/nightswitchlibrary.iml" filepath="$PROJECT_DIR$/nightswitchlibrary/nightswitchlibrary.iml" />
     </modules>
   </component>
 </project>

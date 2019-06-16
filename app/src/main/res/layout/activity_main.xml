@@ -22,7 +22,7 @@
             android:textColor="#444"
             android:textSize="@dimen/value_25" />
 
-        <com.feedr.blog.nightswitch.NightSwitch
+        <com.feedr.blog.nightswitchlibrary.NightSwitch
             android:id="@+id/nightSwitch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
